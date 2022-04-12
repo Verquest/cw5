@@ -24,7 +24,7 @@ namespace cw5.Controllers
             _service.DoesProductExist(order.IdProduct);
             _service.DoesWarehouseExist(order.IdWarehouse);
             _service.GetTheValidOrderId(order);
-            _service.StoredProcedure(order);
+            _service.CompeleteTheOrder(order);
 
             return Ok(200);
         }

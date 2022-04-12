@@ -74,6 +74,7 @@ namespace cw5.services{
 
                 await connection.OpenAsync();
                 var dataReader = await command.ExecuteReaderAsync();
+
                 createdAt = DateTime.Parse(dataReader["CreatedAt"].ToString());
                 orderId = int.Parse(dataReader["orderId"].ToString());
             
