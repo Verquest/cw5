@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Threading.Tasks;
 using cw5.Models;
-using Microsoft.Extensions.Configuration;
 
 namespace cw5.services{
     public class WarehouseService : IWarehouseService
@@ -30,14 +27,14 @@ namespace cw5.services{
             }
         }
 
-        public Task<bool> DoesWarehouseExist(int warehouseId)
+        public async Task<bool> DoesWarehouseExist(int warehouseId)
         {
             using (var connection = new SqlConnection("connection-string"))
             using(var command = new SqlCommand()){
 
                 command.Connection = connection;
-                command.CommandText = "SELECT * FROM product WHERE IdProduct = @1";
-                command.Parameters.AddWithValue("@1", productId);
+                command.CommandText = "SELECT * FROM Warehouse WHERE IdWarehouse = @1";
+                command.Parameters.AddWithValue("@1", warehouseId);
 
                 await connection.OpenAsync();
 
@@ -47,14 +44,41 @@ namespace cw5.services{
         }
 
 
-        public Task<double> GetTheProductPrice(int productId)
+        public async Task<double> GetTheProductPrice(int productId)
         {
-            throw new NotImplementedException();
+            using (var connection = new SqlConnection("connection-string"))
+            using(var command = new SqlCommand()){
+
+                command.Connection = connection;
+                command.CommandText = "SELECT Price FROM product WHERE IdProduct = @1";
+                command.Parameters.AddWithValue("@1", productId);
+
+                await connection.OpenAsync();
+
+                var price = double.Parse((await command.ExecuteScalarAsync()).ToString());
+                return price;
+            }
         }
 
-        public Task<int> GetTheValidOrderId(Order order)
+        public async Task<int> GetTheValidOrderId(Order order)
         {
-            throw new NotImplementedException();
+            DateTime createdAt;
+            int orderId;
+            using (var connection = new SqlConnection("connection-string"))
+            using(var command = new SqlCommand()){
+
+                command.Connection = connection;
+                command.CommandText = "SELECT CreatedAt, IdOrder FROM Product_Warehouse WHERE IdProduct = @1 AND IdWarehouse = @2";
+                command.Parameters.AddWithValue("@1", order.IdProduct);
+                command.Parameters.AddWithValue("@2", order.IdWarehouse);
+
+                await connection.OpenAsync();
+                var dataReader = await command.ExecuteReaderAsync();
+                createdAt = DateTime.Parse(dataReader["CreatedAt"].ToString());
+                orderId = int.Parse(dataReader["orderId"].ToString());
+            
+                return createdAt < DateTime.Now ? orderId: -1;
+            }
         }
 
         public Task<int> StoredProcedure(Order order)
