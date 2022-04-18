@@ -12,21 +12,57 @@ namespace cw5.Controllers
     [Route("api/[controller]")]
     public class WarehousesController : ControllerBase
     {
-        private IWarehouseService _service;
+        private readonly IWarehouseService _service;
         
         public WarehousesController(IWarehouseService service){
             _service = service;
         }
 
         [HttpPost]
-        public IActionResult CompleteOrder(Order order)
+        public async Task<IActionResult> CompleteOrder(int idProduct, int idWarehouse, int amount)
         {
-            _service.DoesProductExist(order.IdProduct);
-            _service.DoesWarehouseExist(order.IdWarehouse);
-            _service.GetTheValidOrderId(order);
-            _service.CompeleteTheOrder(order);
+            var doesProductExist = await _service.DoesProductExist(idProduct);
+            var doesWarehouseExist = await _service.DoesWarehouseExist(idWarehouse);
+            if(!doesProductExist || !doesWarehouseExist){
+                return NotFound("Product/Warehouse does not exist");
+            }
 
-            return Ok(200);
+            var orderId = await _service.GetTheValidOrderId(idProduct, amount);
+            var order = new Order
+            {
+                Id = orderId,
+                IdProduct = idProduct,
+                IdWarehouse = idWarehouse,
+                Amount = amount,
+                CreatedAt = DateTime.Now,
+                FulfilledAt = null
+            };
+
+            if(orderId == -1)
+            {
+                return NotFound("Order does not exist");
+            }
+            if(orderId == -2)
+            {
+                return NotFound("Order has already been fulfilled");
+            }
+            var hasOrderBeenFulfilled = await _service.HasOrderBeenFulfilled(orderId);
+            if(hasOrderBeenFulfilled){
+                return NotFound("Order has already been fulfilled");
+            }
+            if(doesProductExist)
+            {
+                var idOfOrder = await _service.CompeleteTheOrder(order);
+                return Ok("Order created, id=" + idOfOrder);
+            }
+        
+            return BadRequest("Order creation time invalid");
+        }
+        
+        [HttpGet]
+         public IActionResult CompleteOrder()
+        {
+            return Ok();
         }
     }
 }

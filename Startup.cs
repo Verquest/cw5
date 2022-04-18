@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using cw5.services;
+using cw5.Controllers;
 
 namespace cw5
 {
@@ -26,7 +28,7 @@ namespace cw5
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddSingleton<IWarehouseService, WarehouseService>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
